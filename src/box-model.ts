@@ -142,27 +142,22 @@ export default class BoxModel {
     return { stocks, flows, variables, constants };
   }
 
-  public step(initialStockValues: number[], t: number, h: number): number[] {
-    return this.stepExt(initialStockValues, t, h).stocks;
-  }
-
-  public stepExt(initialStockValues: number[], t: number, h: number): Record {
-    const derivs = (y: number[], x: number): number[] => {
+  public step(stocksAtT: number[], t: number, h: number): number[] {
+    const derivatives = (y: number[], x: number): number[] => {
       const { flows } = this.evaluateGraph(y, x);
 
       const f = (id): number => flows[this.idToIdx[id]];
-      const addFlows = (flows) => sum(flows.map((id) => f(id)));
+      const addFlows = (flows) => sum(flows.map(f));
 
-      return y.map((_, i) => {
-        const inFlow = addFlows(this.stocks[i].in);
-        const outFlow = addFlows(this.stocks[i].out);
-        return inFlow - outFlow;
-      });
+      return this.stocks.map((s) => addFlows(s.in) - addFlows(s.out));
     };
 
-    const stocks = this.integrator(initialStockValues, t, h, derivs);
-    const { flows, variables, constants } = this.evaluateGraph(stocks, t + h);
+    return this.integrator(stocksAtT, t, h, derivatives);
+  }
 
+  public stepExt(stocksAtT: number[], t: number, h: number): Record {
+    const stocks = this.step(stocksAtT, t, h);
+    const { flows, variables, constants } = this.evaluateGraph(stocks, t + h);
     return { stocks, variables, constants, flows };
   }
 }
