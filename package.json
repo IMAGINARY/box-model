@@ -1,5 +1,5 @@
 {
-  "name": "box-model",
+  "name": "@imaginary-maths/box-model",
   "version": "0.1.0",
   "description": "An engine for differential equation models aka box models.",
   "author": "Christian Stussak <christian.stussak@imaginary.org>",
