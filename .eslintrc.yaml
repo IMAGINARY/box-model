@@ -1,0 +1,17 @@
+---
+root: true
+ignorePatterns:
+  - "node_modules"
+  - "dist"
+env:
+  browser: true
+  "es6": true
+parserOptions:
+  ecmaVersion: 2020
+  sourceType: module
+  ecmaFeatures: { }
+extends:
+  - airbnb
+  - prettier
+rules:
+  no-underscore-dangle: [ "error", { "allowAfterThis": true } ]
