@@ -38,6 +38,7 @@ export interface Record {
   flows: number[];
   variables: number[];
   constants: number[];
+  t: number;
 }
 
 function duplicates(arr: any[]) {
@@ -139,12 +140,51 @@ export default class BoxModel {
     this.variables.forEach(({ id }) => v(id));
     this.flows.forEach(({ id }) => f(id));
 
-    return { stocks, flows, variables, constants };
+    return { stocks, flows, variables, constants, t };
   }
 
-  public step(stocksAtT: number[], t: number, h: number): number[] {
+  public step(stocksAtT: number[], t: number, h: number): number[];
+  public step(
+    stocksAtT: number[],
+    flowsAtT: number[],
+    t: number,
+    h: number
+  ): number[];
+  public step(
+    stocksAtT: number[],
+    tOrFlowsAtT: number[] | number,
+    tOrH: number,
+    h?: number
+  ): number[] {
+    return typeof tOrFlowsAtT === 'number'
+      ? this.step3(stocksAtT, tOrFlowsAtT, tOrH)
+      : this.step4(stocksAtT, tOrFlowsAtT, tOrH, h);
+  }
+
+  private step3(stocksAtT: number[], t: number, h: number): number[] {
+    const getFlows = (y, x) => this.evaluateGraph(y, x).flows;
+    return this.stepImpl(stocksAtT, getFlows, t, h);
+  }
+
+  private step4(
+    stocksAtT: number[],
+    flowsAtT: number[],
+    t: number,
+    h: number
+  ): number[] {
+    const getFlows = (y, x) =>
+      x === t ? flowsAtT : this.evaluateGraph(y, x).flows;
+    return this.stepImpl(stocksAtT, getFlows, t, h);
+  }
+
+  protected stepImpl(
+    stocksAtT: number[],
+    getFlows: (y: number[], x: number) => number[],
+    t: number,
+    h: number
+  ): number[] {
     const derivatives = (y: number[], x: number): number[] => {
-      const { flows } = this.evaluateGraph(y, x);
+      const flows = getFlows(y, x);
 
       const f = (id): number => flows[this.idToIdx[id]];
       const addFlows = (flows) => sum(flows.map(f));
@@ -155,10 +195,37 @@ export default class BoxModel {
     return this.integrator(stocksAtT, t, h, derivatives);
   }
 
-  public stepExt(stocksAtT: number[], t: number, h: number): Record {
+  public stepExt(stocksAtT: number[], t: number, h: number): Record;
+  public stepExt(
+    stocksAtT: number[],
+    flowsAtT: number[],
+    t: number,
+    h: number
+  ): Record;
+  public stepExt(
+    stocksAtT: number[],
+    tOrFlowsAtT: number[] | number,
+    tOrH: number,
+    h?: number
+  ): Record {
+    return typeof tOrFlowsAtT === 'number'
+      ? this.stepExt3(stocksAtT, tOrFlowsAtT, tOrH)
+      : this.stepExt4(stocksAtT, tOrFlowsAtT, tOrH, h);
+  }
+
+  private stepExt3(stocksAtT: number[], t: number, h: number): Record {
     const stocks = this.step(stocksAtT, t, h);
-    const { flows, variables, constants } = this.evaluateGraph(stocks, t + h);
-    return { stocks, variables, constants, flows };
+    return { stocks, ...this.evaluateGraph(stocks, t + h) };
+  }
+
+  private stepExt4(
+    stocksAtT: number[],
+    flowsAtT: number[],
+    t: number,
+    h: number
+  ): Record {
+    const stocks = this.step(stocksAtT, flowsAtT, t, h);
+    return { stocks, ...this.evaluateGraph(stocks, t + h) };
   }
 }
 

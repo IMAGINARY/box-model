@@ -24,6 +24,7 @@ export interface Record {
     flows: number[];
     variables: number[];
     constants: number[];
+    t: number;
 }
 export default class BoxModel {
     readonly stocks: ReadonlyArray<Stock>;
@@ -45,7 +46,14 @@ export default class BoxModel {
         id: string;
     }>): {};
     evaluateGraph(stocks: number[], t: number): Record;
-    step(initialStockValues: number[], t: number, h: number): number[];
-    stepExt(initialStockValues: number[], t: number, h: number): Record;
+    step(stocksAtT: number[], t: number, h: number): number[];
+    step(stocksAtT: number[], flowsAtT: number[], t: number, h: number): number[];
+    private step3;
+    private step4;
+    protected stepImpl(stocksAtT: number[], getFlows: (y: number[], x: number) => number[], t: number, h: number): number[];
+    stepExt(stocksAtT: number[], t: number, h: number): Record;
+    stepExt(stocksAtT: number[], flowsAtT: number[], t: number, h: number): Record;
+    private stepExt3;
+    private stepExt4;
 }
 export { BoxModel };
