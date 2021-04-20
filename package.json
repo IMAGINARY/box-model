@@ -17,6 +17,7 @@
   "files": [
     "dist/**"
   ],
+  "private": false,
   "type": "module",
   "source": "src/index.ts",
   "main": "dist/box-model.js",
