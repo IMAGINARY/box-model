@@ -9,6 +9,11 @@
     "url": "https://github.com/IMAGINARY/box-model/issues"
   },
   "license": "MIT",
+  "keywords": [
+    "math",
+    "model",
+    "box-model"
+  ],
   "type": "module",
   "source": "src/index.ts",
   "main": "dist/box-model.js",
