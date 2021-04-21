@@ -4,6 +4,10 @@ export { IVPIntegrator, euler, rk4 };
 
 type LookupFunction = (id: string) => number;
 
+interface LookupFunctionWithData extends LookupFunction {
+  data: number[];
+}
+
 export type Equation = (
   s: LookupFunction,
   f: LookupFunction,
@@ -47,7 +51,7 @@ function duplicates<Type>(arr: Type[]): Type[] {
       a.push(cur);
     }
     return acc;
-  }, []);
+  }, [] as Type[]);
 }
 
 function sum(arr: Array<number>) {
@@ -98,12 +102,12 @@ export default class BoxModel {
   }
 
   protected ensureUniqueIds(): void {
-    const ids = []
+    const ids = ([] as Array<{ id: string }>)
       .concat(this.stocks, this.variables, this.constants, this.flows)
       .map((item) => item.id);
     const duplicateIds = duplicates(ids);
     if (duplicateIds.length > 0) {
-      throw new Error(`Duplicate ids found: ${duplicateIds}`);
+      throw new Error(`Duplicate ids found: ${JSON.stringify(duplicateIds)}`);
     }
   }
 
@@ -117,16 +121,19 @@ export default class BoxModel {
   }
 
   public evaluateGraph(stocks: number[], t: number): Record {
-    const s = (id) => stocks[this.idToIdx[id]];
+    const s: LookupFunction = (id) => stocks[this.idToIdx[id]];
 
     const constants = this.constants.map(({ value }) => value);
-    const c = (id) => constants[this.idToIdx[id]];
+    const c: LookupFunction = (id) => constants[this.idToIdx[id]];
 
-    let f;
-    let v;
-    const buildEvaluator = (items) => {
-      const data = new Array(items.length);
-      const evaluator = (id) => {
+    let f: LookupFunctionWithData;
+    let v: LookupFunctionWithData;
+
+    const buildEvaluator = (
+      items: ReadonlyArray<Flow> | ReadonlyArray<Variable>
+    ): LookupFunctionWithData => {
+      const data = new Array(items.length) as number[];
+      const evaluator = (id: string) => {
         const idx = this.idToIdx[id];
         if (data[idx] === null) {
           throw new Error(`Evaluation cycle detected starting at: ${id}`);
@@ -197,8 +204,8 @@ export default class BoxModel {
     const derivatives = (y: number[], x: number): number[] => {
       const flows = getFlows(y, x);
 
-      const f = (id): number => flows[this.idToIdx[id]];
-      const addFlows = (flowIds) => sum(flowIds.map(f));
+      const f: LookupFunction = (id): number => flows[this.idToIdx[id]];
+      const addFlows = (flowIds: ReadonlyArray<string>) => sum(flowIds.map(f));
 
       return this.stocks.map((s) => addFlows(s.in) - addFlows(s.out));
     };
