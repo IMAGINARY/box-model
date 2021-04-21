@@ -8,7 +8,7 @@ interface LookupFunctionWithData extends LookupFunction {
   data: number[];
 }
 
-export type Equation = (
+export type Formula = (
   s: LookupFunction,
   f: LookupFunction,
   v: LookupFunction,
@@ -24,12 +24,12 @@ export interface Stock {
 
 export interface Flow {
   readonly id: string;
-  readonly equation: Equation;
+  readonly formula: Formula;
 }
 
 export interface Variable {
   readonly id: string;
-  readonly equation: Equation;
+  readonly formula: Formula;
 }
 
 export interface Constant {
@@ -141,7 +141,7 @@ export default class BoxModel {
 
         if (typeof data[idx] === 'undefined') {
           data[idx] = null; // guard the element for cycle detection
-          data[idx] = items[idx].equation(s, f, v, c, t);
+          data[idx] = items[idx].formula(s, f, v, c, t);
         }
         return data[idx];
       };

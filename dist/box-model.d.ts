@@ -1,7 +1,7 @@
 import { IVPIntegrator, euler, rk4 } from './ode';
 export { IVPIntegrator, euler, rk4 };
 declare type LookupFunction = (id: string) => number;
-export declare type Equation = (s: LookupFunction, f: LookupFunction, v: LookupFunction, c: LookupFunction, t: number) => number;
+export declare type Formula = (s: LookupFunction, f: LookupFunction, v: LookupFunction, c: LookupFunction, t: number) => number;
 export interface Stock {
     readonly id: string;
     readonly in: ReadonlyArray<string>;
@@ -9,11 +9,11 @@ export interface Stock {
 }
 export interface Flow {
     readonly id: string;
-    readonly equation: Equation;
+    readonly formula: Formula;
 }
 export interface Variable {
     readonly id: string;
-    readonly equation: Equation;
+    readonly formula: Formula;
 }
 export interface Constant {
     readonly id: string;
