@@ -59,3 +59,4 @@ export default class BoxModel {
     private stepExt4;
 }
 export { BoxModel };
+//# sourceMappingURL=box-model.d.ts.map

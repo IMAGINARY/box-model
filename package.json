@@ -21,6 +21,7 @@
   "type": "module",
   "source": "src/index.ts",
   "main": "dist/box-model.js",
+  "types": "dist/index.d.ts",
   "exports": "./dist/box-model.modern.js",
   "module": "dist/box-model.module.js",
   "unpkg": "dist/box-model.umd.js",
