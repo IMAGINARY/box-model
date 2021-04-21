@@ -42,6 +42,7 @@
   "dependencies": {},
   "scripts": {
     "build": "microbundle",
-    "dev": "microbundle watch"
+    "dev": "microbundle watch",
+    "prettier": "prettier --write ."
   }
 }
