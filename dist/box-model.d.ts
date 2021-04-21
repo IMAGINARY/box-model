@@ -44,7 +44,9 @@ export default class BoxModel {
     protected ensureUniqueIds(): void;
     static createIdToIdxMap(arr: Array<{
         id: string;
-    }>): {};
+    }>): {
+        [key: string]: number;
+    };
     evaluateGraph(stocks: number[], t: number): Record;
     step(stocksAtT: number[], t: number, h: number): number[];
     step(stocksAtT: number[], flowsAtT: number[], t: number, h: number): number[];

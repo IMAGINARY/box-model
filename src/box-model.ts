@@ -41,24 +41,28 @@ export interface Record {
   t: number;
 }
 
-function duplicates(arr: any[]) {
-  return arr.reduce((acc, cur, curIdx, arr) => {
-    if (arr.lastIndexOf(cur) !== curIdx) {
-      arr.push(cur);
+function duplicates<Type>(arr: Type[]): Type[] {
+  return arr.reduce((acc, cur, curIdx, a) => {
+    if (a.lastIndexOf(cur) !== curIdx) {
+      a.push(cur);
     }
     return acc;
   }, []);
 }
 
-function sum(a: Array<number>) {
-  return a.reduce((a, c) => a + c, 0);
+function sum(arr: Array<number>) {
+  return arr.reduce((acc, cur) => acc + cur, 0);
 }
 
 export default class BoxModel {
   public readonly stocks: ReadonlyArray<Stock>;
+
   public readonly flows: ReadonlyArray<Flow>;
+
   public readonly variables: ReadonlyArray<Variable>;
+
   public readonly constants: ReadonlyArray<Constant>;
+
   public integrator: IVPIntegrator;
 
   protected idToIdx: { [key: string]: number };
@@ -93,7 +97,7 @@ export default class BoxModel {
     };
   }
 
-  protected ensureUniqueIds() {
+  protected ensureUniqueIds(): void {
     const ids = []
       .concat(this.stocks, this.variables, this.constants, this.flows)
       .map((item) => item.id);
@@ -103,10 +107,13 @@ export default class BoxModel {
     }
   }
 
-  static createIdToIdxMap(arr: Array<{ id: string }>) {
-    const map = {};
-    arr.forEach(({ id }, i) => (map[id] = i));
-    return map;
+  static createIdToIdxMap(
+    arr: Array<{ id: string }>
+  ): { [key: string]: number } {
+    return arr.reduce(
+      (acc, { id }, idx) => Object.assign(acc, { [id]: idx }),
+      {}
+    );
   }
 
   public evaluateGraph(stocks: number[], t: number): Record {
@@ -115,27 +122,31 @@ export default class BoxModel {
     const constants = this.constants.map(({ value }) => value);
     const c = (id) => constants[this.idToIdx[id]];
 
+    let f;
+    let v;
     const buildEvaluator = (items) => {
       const data = new Array(items.length);
-      return {
-        evaluator: (id) => {
-          const idx = this.idToIdx[id];
-          if (data[idx] === null) {
-            throw new Error('Evaluation cycle detected starting at: ${id}');
-          }
+      const evaluator = (id) => {
+        const idx = this.idToIdx[id];
+        if (data[idx] === null) {
+          throw new Error(`Evaluation cycle detected starting at: ${id}`);
+        }
 
-          if (typeof data[idx] === 'undefined') {
-            data[idx] = null; // guard the element for cycle detection
-            data[idx] = items[idx].equation(s, f, v, c, t);
-          }
-          return data[idx];
-        },
-        data,
+        if (typeof data[idx] === 'undefined') {
+          data[idx] = null; // guard the element for cycle detection
+          data[idx] = items[idx].equation(s, f, v, c, t);
+        }
+        return data[idx];
       };
+      evaluator.data = data;
+      return evaluator;
     };
 
-    const { evaluator: v, data: variables } = buildEvaluator(this.variables);
-    const { evaluator: f, data: flows } = buildEvaluator(this.flows);
+    v = buildEvaluator(this.variables);
+    const variables = v.data;
+
+    f = buildEvaluator(this.flows);
+    const flows = f.data;
 
     this.variables.forEach(({ id }) => v(id));
     this.flows.forEach(({ id }) => f(id));
@@ -187,7 +198,7 @@ export default class BoxModel {
       const flows = getFlows(y, x);
 
       const f = (id): number => flows[this.idToIdx[id]];
-      const addFlows = (flows) => sum(flows.map(f));
+      const addFlows = (flowIds) => sum(flowIds.map(f));
 
       return this.stocks.map((s) => addFlows(s.in) - addFlows(s.out));
     };

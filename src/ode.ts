@@ -10,7 +10,7 @@ export function euler(
   x: number,
   h: number,
   derivatives: (y: number[], x: number) => number[]
-) {
+): number[] {
   const dydx = derivatives(y, x);
   return y.map((_, i) => y[i] + h * dydx[i]);
 }
@@ -20,7 +20,7 @@ export function rk4(
   x: number,
   h: number,
   derivatives: (y: number[], x: number) => number[]
-) {
+): number[] {
   const n: number = y.length;
 
   const dydx = derivatives(y, x);
@@ -30,13 +30,13 @@ export function rk4(
   const h6 = h / 6.0;
   const xhh = x + hh;
 
-  for (let i: number = 0; i < n; i += 1) yt[i] = y[i] + hh * dydx[i];
+  for (let i = 0; i < n; i += 1) yt[i] = y[i] + hh * dydx[i];
   let dyt = derivatives(yt, xhh);
 
-  for (let i: number = 0; i < n; i += 1) yt[i] = y[i] + hh * dyt[i];
+  for (let i = 0; i < n; i += 1) yt[i] = y[i] + hh * dyt[i];
   const dym = derivatives(yt, xhh);
 
-  for (let i: number = 0; i < n; i += 1) {
+  for (let i = 0; i < n; i += 1) {
     yt[i] = y[i] + h * dym[i];
     dym[i] += dyt[i];
   }
