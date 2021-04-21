@@ -1,17 +1,24 @@
 ---
 root: true
 ignorePatterns:
-  - "node_modules"
-  - "dist"
+  - 'node_modules'
+  - 'dist'
 env:
   browser: true
-  "es6": true
+  'es6': true
+parser: '@typescript-eslint/parser'
 parserOptions:
   ecmaVersion: 2020
-  sourceType: module
+  sourceType: 'module'
   ecmaFeatures: { }
+  project: './tsconfig.json'
+plugins:
+  - '@typescript-eslint'
 extends:
-  - airbnb
-  - prettier
+  - 'eslint:recommended'
+  - 'airbnb-typescript'
+  - 'prettier'
+  - 'plugin:@typescript-eslint/recommended'
+#  - 'plugin:@typescript-eslint/recommended-requiring-type-checking'
 rules:
-  no-underscore-dangle: [ "error", { "allowAfterThis": true } ]
+  no-underscore-dangle: [ 'error', { allowAfterThis: true } ]
