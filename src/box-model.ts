@@ -109,7 +109,7 @@ export default class BoxModelEngine {
       return this.step3(stocksAtT, tOrFlowsAtT, tOrH);
     if (typeof h !== 'undefined')
       return this.step4(stocksAtT, tOrFlowsAtT, tOrH, h);
-    throw new SyntaxError();
+    throw new TypeError();
   }
 
   private step3(stocksAtT: number[], t: number, h: number): number[] {
@@ -165,7 +165,7 @@ export default class BoxModelEngine {
       return this.stepExt3(stocksAtT, tOrFlowsAtT, tOrH);
     if (typeof h !== 'undefined')
       return this.stepExt4(stocksAtT, tOrFlowsAtT, tOrH, h);
-    throw new SyntaxError();
+    throw new TypeError();
   }
 
   private stepExt3(stocksAtT: number[], t: number, h: number): Record {
