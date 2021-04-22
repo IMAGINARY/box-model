@@ -1,48 +1,17 @@
-import { IVPIntegrator, euler, rk4 } from './ode';
+import {
+  Stock,
+  Flow,
+  Variable,
+  Parameter,
+  LookupFunction,
+  Record,
+  IVPIntegrator,
+} from './types';
 
-export { IVPIntegrator, euler, rk4 };
-
-type LookupFunction = (id: string) => number;
+import { rk4 } from './ode';
 
 interface LookupFunctionWithData extends LookupFunction {
   data: number[];
-}
-
-export type Formula = (
-  s: LookupFunction,
-  f: LookupFunction,
-  v: LookupFunction,
-  c: LookupFunction,
-  t: number
-) => number;
-
-export interface Stock {
-  readonly id: string;
-  readonly in: ReadonlyArray<string>;
-  readonly out: ReadonlyArray<string>;
-}
-
-export interface Flow {
-  readonly id: string;
-  readonly formula: Formula;
-}
-
-export interface Variable {
-  readonly id: string;
-  readonly formula: Formula;
-}
-
-export interface Parameter {
-  readonly id: string;
-  value: number;
-}
-
-export interface Record {
-  stocks: number[];
-  flows: number[];
-  variables: number[];
-  parameters: number[];
-  t: number;
 }
 
 function duplicates<Type>(arr: Type[]): Type[] {

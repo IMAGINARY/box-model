@@ -1,31 +1,4 @@
-import { IVPIntegrator, euler, rk4 } from './ode';
-export { IVPIntegrator, euler, rk4 };
-declare type LookupFunction = (id: string) => number;
-export declare type Formula = (s: LookupFunction, f: LookupFunction, v: LookupFunction, c: LookupFunction, t: number) => number;
-export interface Stock {
-    readonly id: string;
-    readonly in: ReadonlyArray<string>;
-    readonly out: ReadonlyArray<string>;
-}
-export interface Flow {
-    readonly id: string;
-    readonly formula: Formula;
-}
-export interface Variable {
-    readonly id: string;
-    readonly formula: Formula;
-}
-export interface Parameter {
-    readonly id: string;
-    value: number;
-}
-export interface Record {
-    stocks: number[];
-    flows: number[];
-    variables: number[];
-    parameters: number[];
-    t: number;
-}
+import { Stock, Flow, Variable, Parameter, Record, IVPIntegrator } from './types';
 export default class BoxModel {
     readonly stocks: ReadonlyArray<Stock>;
     readonly flows: ReadonlyArray<Flow>;

@@ -1,10 +1,3 @@
-export type IVPIntegrator = (
-  y: number[],
-  x: number,
-  h: number,
-  derivatives: (y: number[], x: number) => number[]
-) => number[];
-
 export function euler(
   y: number[],
   x: number,
