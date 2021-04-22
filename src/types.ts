@@ -9,24 +9,31 @@ export type Formula = (
 ) => number;
 
 export interface Stock {
-  readonly id: string;
-  readonly in: ReadonlyArray<string>;
-  readonly out: ReadonlyArray<string>;
+  id: string;
+  in: string[];
+  out: string[];
 }
 
 export interface Flow {
-  readonly id: string;
-  readonly formula: Formula;
+  id: string;
+  formula: Formula;
 }
 
 export interface Variable {
-  readonly id: string;
-  readonly formula: Formula;
+  id: string;
+  formula: Formula;
 }
 
 export interface Parameter {
-  readonly id: string;
+  id: string;
   value: number;
+}
+
+export interface BoxModel {
+  stocks: Array<Stock>;
+  flows: Array<Flow>;
+  variables: Array<Variable>;
+  parameters: Array<Parameter>;
 }
 
 export interface Record {
@@ -38,8 +45,12 @@ export interface Record {
 }
 
 export type IVPIntegrator = (
-  y: number[],
+  y: ReadonlyArray<number>,
   x: number,
   h: number,
-  derivatives: (y: number[], x: number) => number[]
+  derivatives: (y: ReadonlyArray<number>, x: number) => number[]
 ) => number[];
+
+export interface BoxModelOptions {
+  integrator: IVPIntegrator;
+}

@@ -1,21 +1,27 @@
 export declare type LookupFunction = (id: string) => number;
 export declare type Formula = (s: LookupFunction, f: LookupFunction, v: LookupFunction, c: LookupFunction, t: number) => number;
 export interface Stock {
-    readonly id: string;
-    readonly in: ReadonlyArray<string>;
-    readonly out: ReadonlyArray<string>;
+    id: string;
+    in: string[];
+    out: string[];
 }
 export interface Flow {
-    readonly id: string;
-    readonly formula: Formula;
+    id: string;
+    formula: Formula;
 }
 export interface Variable {
-    readonly id: string;
-    readonly formula: Formula;
+    id: string;
+    formula: Formula;
 }
 export interface Parameter {
-    readonly id: string;
+    id: string;
     value: number;
+}
+export interface BoxModel {
+    stocks: Array<Stock>;
+    flows: Array<Flow>;
+    variables: Array<Variable>;
+    parameters: Array<Parameter>;
 }
 export interface Record {
     stocks: number[];
@@ -24,5 +30,8 @@ export interface Record {
     parameters: number[];
     t: number;
 }
-export declare type IVPIntegrator = (y: number[], x: number, h: number, derivatives: (y: number[], x: number) => number[]) => number[];
+export declare type IVPIntegrator = (y: ReadonlyArray<number>, x: number, h: number, derivatives: (y: ReadonlyArray<number>, x: number) => number[]) => number[];
+export interface BoxModelOptions {
+    integrator: IVPIntegrator;
+}
 //# sourceMappingURL=types.d.ts.map

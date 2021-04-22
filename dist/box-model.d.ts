@@ -1,35 +1,24 @@
-import { Stock, Flow, Variable, Parameter, Record, IVPIntegrator } from './types';
-export default class BoxModel {
-    readonly stocks: ReadonlyArray<Stock>;
-    readonly flows: ReadonlyArray<Flow>;
-    readonly variables: ReadonlyArray<Variable>;
-    readonly parameters: ReadonlyArray<Parameter>;
+import { BoxModel, BoxModelOptions, Record, IVPIntegrator } from './types';
+declare type FlowGetter = (y: ReadonlyArray<number>, x: number) => number[];
+export default class BoxModelEngine {
+    model: BoxModel;
     integrator: IVPIntegrator;
-    protected idToIdx: {
-        [key: string]: number;
-    };
-    constructor({ stocks, flows, variables, parameters, }: {
-        stocks: Stock[];
-        flows: Flow[];
-        variables: Variable[];
-        parameters: Parameter[];
-    }, integrator?: IVPIntegrator);
-    protected ensureUniqueIds(): void;
-    static createIdToIdxMap(arr: Array<{
-        id: string;
+    constructor(model: BoxModel, options?: BoxModelOptions);
+    static createIdToIdxMap(arr: ReadonlyArray<{
+        readonly id: string;
     }>): {
         [key: string]: number;
     };
-    evaluateGraph(stocks: number[], t: number): Record;
-    step(stocksAtT: number[], t: number, h: number): number[];
+    evaluateGraph(stocks: ReadonlyArray<number>, t: number): Record;
+    step(stocksAtT: ReadonlyArray<number>, t: number, h: number): number[];
     step(stocksAtT: number[], flowsAtT: number[], t: number, h: number): number[];
     private step3;
     private step4;
-    protected stepImpl(stocksAtT: number[], getFlows: (y: number[], x: number) => number[], t: number, h: number): number[];
+    protected stepImpl(stocksAtT: number[], getFlows: FlowGetter, t: number, h: number): number[];
     stepExt(stocksAtT: number[], t: number, h: number): Record;
     stepExt(stocksAtT: number[], flowsAtT: number[], t: number, h: number): Record;
     private stepExt3;
     private stepExt4;
 }
-export { BoxModel };
+export { BoxModelEngine };
 //# sourceMappingURL=box-model.d.ts.map

@@ -1,18 +1,18 @@
 export function euler(
-  y: number[],
+  y: ReadonlyArray<number>,
   x: number,
   h: number,
-  derivatives: (y: number[], x: number) => number[]
+  derivatives: (y: ReadonlyArray<number>, x: number) => number[]
 ): number[] {
   const dydx = derivatives(y, x);
   return y.map((yi, i) => yi + h * dydx[i]);
 }
 
 export function rk4(
-  y: number[],
+  y: ReadonlyArray<number>,
   x: number,
   h: number,
-  derivatives: (y: number[], x: number) => number[]
+  derivatives: (y: ReadonlyArray<number>, x: number) => number[]
 ): number[] {
   const n: number = y.length;
 

@@ -1,8 +1,8 @@
 import {
-  Stock,
   Flow,
   Variable,
-  Parameter,
+  BoxModel,
+  BoxModelOptions,
   LookupFunction,
   Record,
   IVPIntegrator,
@@ -11,77 +11,27 @@ import {
 import { rk4 } from './ode';
 
 interface LookupFunctionWithData extends LookupFunction {
-  data: number[];
+  data: (number | boolean)[];
 }
 
-function duplicates<Type>(arr: Type[]): Type[] {
-  return arr.reduce((acc, cur, curIdx, a) => {
-    if (a.lastIndexOf(cur) !== curIdx) {
-      a.push(cur);
-    }
-    return acc;
-  }, [] as Type[]);
-}
+type FlowGetter = (y: ReadonlyArray<number>, x: number) => number[];
 
 function sum(arr: Array<number>) {
   return arr.reduce((acc, cur) => acc + cur, 0);
 }
 
-export default class BoxModel {
-  public readonly stocks: ReadonlyArray<Stock>;
-
-  public readonly flows: ReadonlyArray<Flow>;
-
-  public readonly variables: ReadonlyArray<Variable>;
-
-  public readonly parameters: ReadonlyArray<Parameter>;
+export default class BoxModelEngine {
+  public model: BoxModel;
 
   public integrator: IVPIntegrator;
 
-  protected idToIdx: { [key: string]: number };
-
-  constructor(
-    {
-      stocks,
-      flows,
-      variables,
-      parameters,
-    }: {
-      stocks: Stock[];
-      flows: Flow[];
-      variables: Variable[];
-      parameters: Parameter[];
-    },
-    integrator: IVPIntegrator = rk4
-  ) {
-    this.stocks = stocks;
-    this.flows = flows;
-    this.variables = variables;
-    this.parameters = parameters;
-    this.integrator = integrator;
-
-    this.ensureUniqueIds();
-
-    this.idToIdx = {
-      ...BoxModel.createIdToIdxMap(stocks),
-      ...BoxModel.createIdToIdxMap(variables),
-      ...BoxModel.createIdToIdxMap(parameters),
-      ...BoxModel.createIdToIdxMap(flows),
-    };
+  constructor(model: BoxModel, options: BoxModelOptions = { integrator: rk4 }) {
+    this.model = model;
+    this.integrator = options.integrator;
   }
 
-  protected ensureUniqueIds(): void {
-    const ids = ([] as Array<{ id: string }>)
-      .concat(this.stocks, this.variables, this.parameters, this.flows)
-      .map((item) => item.id);
-    const duplicateIds = duplicates(ids);
-    if (duplicateIds.length > 0) {
-      throw new Error(`Duplicate ids found: ${JSON.stringify(duplicateIds)}`);
-    }
-  }
-
-  static createIdToIdxMap(
-    arr: Array<{ id: string }>
+  public static createIdToIdxMap(
+    arr: ReadonlyArray<{ readonly id: string }>
   ): { [key: string]: number } {
     return arr.reduce(
       (acc, { id }, idx) => Object.assign(acc, { [id]: idx }),
@@ -89,11 +39,15 @@ export default class BoxModel {
     );
   }
 
-  public evaluateGraph(stocks: number[], t: number): Record {
-    const s: LookupFunction = (id) => stocks[this.idToIdx[id]];
+  public evaluateGraph(stocks: ReadonlyArray<number>, t: number): Record {
+    const stockIdToIdx = BoxModelEngine.createIdToIdxMap(this.model.stocks);
+    const s: LookupFunction = (id) => stocks[stockIdToIdx[id]];
 
-    const parameters = this.parameters.map(({ value }) => value);
-    const p: LookupFunction = (id) => parameters[this.idToIdx[id]];
+    const parameterIdToIdx = BoxModelEngine.createIdToIdxMap(
+      this.model.parameters
+    );
+    const parameters = this.model.parameters.map(({ value }) => value);
+    const p: LookupFunction = (id) => parameters[parameterIdToIdx[id]];
 
     let f: LookupFunctionWithData;
     let v: LookupFunctionWithData;
@@ -101,36 +55,44 @@ export default class BoxModel {
     const buildEvaluator = (
       items: ReadonlyArray<Flow> | ReadonlyArray<Variable>
     ): LookupFunctionWithData => {
-      const data = new Array(items.length) as number[];
+      const idToIdx = BoxModelEngine.createIdToIdxMap(items);
+      const data: (number | boolean)[] = items.map(() => false);
       const evaluator = (id: string) => {
-        const idx = this.idToIdx[id];
-        if (data[idx] === null) {
-          throw new Error(`Evaluation cycle detected starting at: ${id}`);
+        const idx = idToIdx[id];
+        if (typeof data[idx] === 'boolean') {
+          // not initialized yet
+          if (data[idx]) {
+            throw new Error(`Evaluation cycle detected starting at: ${id}`);
+          } else {
+            data[idx] = true; // guard the element for cycle detection
+            data[idx] = items[idx].formula(s, f, v, p, t);
+            return data[idx] as number;
+          }
+        } else {
+          return data[idx] as number;
         }
-
-        if (typeof data[idx] === 'undefined') {
-          data[idx] = null; // guard the element for cycle detection
-          data[idx] = items[idx].formula(s, f, v, p, t);
-        }
-        return data[idx];
       };
       evaluator.data = data;
       return evaluator;
     };
 
-    v = buildEvaluator(this.variables);
-    const variables = v.data;
+    v = buildEvaluator(this.model.variables);
 
-    f = buildEvaluator(this.flows);
-    const flows = f.data;
+    f = buildEvaluator(this.model.flows);
 
-    this.variables.forEach(({ id }) => v(id));
-    this.flows.forEach(({ id }) => f(id));
+    this.model.variables.forEach(({ id }) => v(id));
+    this.model.flows.forEach(({ id }) => f(id));
 
-    return { stocks, flows, variables, parameters, t };
+    return {
+      stocks: stocks as number[],
+      flows: f.data as number[],
+      variables: v.data as number[],
+      parameters,
+      t,
+    };
   }
 
-  public step(stocksAtT: number[], t: number, h: number): number[];
+  public step(stocksAtT: ReadonlyArray<number>, t: number, h: number): number[];
   public step(
     stocksAtT: number[],
     flowsAtT: number[],
@@ -143,13 +105,15 @@ export default class BoxModel {
     tOrH: number,
     h?: number
   ): number[] {
-    return typeof tOrFlowsAtT === 'number'
-      ? this.step3(stocksAtT, tOrFlowsAtT, tOrH)
-      : this.step4(stocksAtT, tOrFlowsAtT, tOrH, h);
+    if (typeof tOrFlowsAtT === 'number')
+      return this.step3(stocksAtT, tOrFlowsAtT, tOrH);
+    if (typeof h !== 'undefined')
+      return this.step4(stocksAtT, tOrFlowsAtT, tOrH, h);
+    throw new SyntaxError();
   }
 
   private step3(stocksAtT: number[], t: number, h: number): number[] {
-    const getFlows = (y, x) => this.evaluateGraph(y, x).flows;
+    const getFlows: FlowGetter = (y, x) => this.evaluateGraph(y, x).flows;
     return this.stepImpl(stocksAtT, getFlows, t, h);
   }
 
@@ -159,24 +123,26 @@ export default class BoxModel {
     t: number,
     h: number
   ): number[] {
-    const getFlows = (y, x) =>
+    const getFlows: FlowGetter = (y, x) =>
       x === t ? flowsAtT : this.evaluateGraph(y, x).flows;
     return this.stepImpl(stocksAtT, getFlows, t, h);
   }
 
   protected stepImpl(
     stocksAtT: number[],
-    getFlows: (y: number[], x: number) => number[],
+    getFlows: FlowGetter,
     t: number,
     h: number
   ): number[] {
-    const derivatives = (y: number[], x: number): number[] => {
+    const flowIdToIdx = BoxModelEngine.createIdToIdxMap(this.model.flows);
+
+    const derivatives = (y: ReadonlyArray<number>, x: number): number[] => {
       const flows = getFlows(y, x);
 
-      const f: LookupFunction = (id): number => flows[this.idToIdx[id]];
+      const f: LookupFunction = (id): number => flows[flowIdToIdx[id]];
       const addFlows = (flowIds: ReadonlyArray<string>) => sum(flowIds.map(f));
 
-      return this.stocks.map((s) => addFlows(s.in) - addFlows(s.out));
+      return this.model.stocks.map((s) => addFlows(s.in) - addFlows(s.out));
     };
 
     return this.integrator(stocksAtT, t, h, derivatives);
@@ -195,14 +161,16 @@ export default class BoxModel {
     tOrH: number,
     h?: number
   ): Record {
-    return typeof tOrFlowsAtT === 'number'
-      ? this.stepExt3(stocksAtT, tOrFlowsAtT, tOrH)
-      : this.stepExt4(stocksAtT, tOrFlowsAtT, tOrH, h);
+    if (typeof tOrFlowsAtT === 'number')
+      return this.stepExt3(stocksAtT, tOrFlowsAtT, tOrH);
+    if (typeof h !== 'undefined')
+      return this.stepExt4(stocksAtT, tOrFlowsAtT, tOrH, h);
+    throw new SyntaxError();
   }
 
   private stepExt3(stocksAtT: number[], t: number, h: number): Record {
     const stocks = this.step(stocksAtT, t, h);
-    return { stocks, ...this.evaluateGraph(stocks, t + h) };
+    return this.evaluateGraph(stocks, t + h);
   }
 
   private stepExt4(
@@ -212,8 +180,8 @@ export default class BoxModel {
     h: number
   ): Record {
     const stocks = this.step(stocksAtT, flowsAtT, t, h);
-    return { stocks, ...this.evaluateGraph(stocks, t + h) };
+    return this.evaluateGraph(stocks, t + h);
   }
 }
 
-export { BoxModel };
+export { BoxModelEngine };
