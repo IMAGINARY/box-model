@@ -4,7 +4,9 @@ This package provides an engine for running simulation on so-called mathematical
 
 ## Install
 
-`npm install @imaginary-maths/box-model`
+```shell
+npm install @imaginary-maths/box-model
+```
 
 ## Usage
 
@@ -15,7 +17,7 @@ A _box model_ consists of:
 - Some _variables_ or values that depend on other values according to certain formulas.
 - Some _parameters_ or values that we are free to adjust.
 
-These have to be defined using the (TypeScript) data types `Stocks`, `Flow`, `Variable` and `Parameter` and combined into a `BoxModel` (see [`src/types.ts`](src/types.ts)).
+These have to be defined using the (TypeScript) data types `Stocks`, `Flow`, `Variable` and `Parameter` and combined into a `BoxModel` (see [`docs`](https://imaginary.github.io/box-model/docs/index.html)).
 
 A simple example that models the energy balance of the earth depending on the albedo (while ignoring other major contributors) would be:
 
@@ -171,12 +173,18 @@ The library has been designed for ease of use and with easy definition of the mo
 
 To build the library yourself, run
 
-```
+```shell
 npm install
 npm run build
 ```
 
 Upon success, the updated build artifacts will be present in the [`dist`](dist) folder.
+
+To create the [TypeDoc](https://typedoc.org) documentation inside `docs/`, run
+
+```shell
+npm run doc
+```
 
 ## Credits
 
