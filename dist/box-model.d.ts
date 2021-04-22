@@ -15,7 +15,7 @@ export interface Variable {
     readonly id: string;
     readonly formula: Formula;
 }
-export interface Constant {
+export interface Parameter {
     readonly id: string;
     value: number;
 }
@@ -23,23 +23,23 @@ export interface Record {
     stocks: number[];
     flows: number[];
     variables: number[];
-    constants: number[];
+    parameters: number[];
     t: number;
 }
 export default class BoxModel {
     readonly stocks: ReadonlyArray<Stock>;
     readonly flows: ReadonlyArray<Flow>;
     readonly variables: ReadonlyArray<Variable>;
-    readonly constants: ReadonlyArray<Constant>;
+    readonly parameters: ReadonlyArray<Parameter>;
     integrator: IVPIntegrator;
     protected idToIdx: {
         [key: string]: number;
     };
-    constructor({ stocks, flows, variables, constants, }: {
+    constructor({ stocks, flows, variables, parameters, }: {
         stocks: Stock[];
         flows: Flow[];
         variables: Variable[];
-        constants: Constant[];
+        parameters: Parameter[];
     }, integrator?: IVPIntegrator);
     protected ensureUniqueIds(): void;
     static createIdToIdxMap(arr: Array<{

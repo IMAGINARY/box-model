@@ -32,7 +32,7 @@ export interface Variable {
   readonly formula: Formula;
 }
 
-export interface Constant {
+export interface Parameter {
   readonly id: string;
   value: number;
 }
@@ -41,7 +41,7 @@ export interface Record {
   stocks: number[];
   flows: number[];
   variables: number[];
-  constants: number[];
+  parameters: number[];
   t: number;
 }
 
@@ -65,7 +65,7 @@ export default class BoxModel {
 
   public readonly variables: ReadonlyArray<Variable>;
 
-  public readonly constants: ReadonlyArray<Constant>;
+  public readonly parameters: ReadonlyArray<Parameter>;
 
   public integrator: IVPIntegrator;
 
@@ -76,19 +76,19 @@ export default class BoxModel {
       stocks,
       flows,
       variables,
-      constants,
+      parameters,
     }: {
       stocks: Stock[];
       flows: Flow[];
       variables: Variable[];
-      constants: Constant[];
+      parameters: Parameter[];
     },
     integrator: IVPIntegrator = rk4
   ) {
     this.stocks = stocks;
     this.flows = flows;
     this.variables = variables;
-    this.constants = constants;
+    this.parameters = parameters;
     this.integrator = integrator;
 
     this.ensureUniqueIds();
@@ -96,14 +96,14 @@ export default class BoxModel {
     this.idToIdx = {
       ...BoxModel.createIdToIdxMap(stocks),
       ...BoxModel.createIdToIdxMap(variables),
-      ...BoxModel.createIdToIdxMap(constants),
+      ...BoxModel.createIdToIdxMap(parameters),
       ...BoxModel.createIdToIdxMap(flows),
     };
   }
 
   protected ensureUniqueIds(): void {
     const ids = ([] as Array<{ id: string }>)
-      .concat(this.stocks, this.variables, this.constants, this.flows)
+      .concat(this.stocks, this.variables, this.parameters, this.flows)
       .map((item) => item.id);
     const duplicateIds = duplicates(ids);
     if (duplicateIds.length > 0) {
@@ -123,8 +123,8 @@ export default class BoxModel {
   public evaluateGraph(stocks: number[], t: number): Record {
     const s: LookupFunction = (id) => stocks[this.idToIdx[id]];
 
-    const constants = this.constants.map(({ value }) => value);
-    const c: LookupFunction = (id) => constants[this.idToIdx[id]];
+    const parameters = this.parameters.map(({ value }) => value);
+    const p: LookupFunction = (id) => parameters[this.idToIdx[id]];
 
     let f: LookupFunctionWithData;
     let v: LookupFunctionWithData;
@@ -141,7 +141,7 @@ export default class BoxModel {
 
         if (typeof data[idx] === 'undefined') {
           data[idx] = null; // guard the element for cycle detection
-          data[idx] = items[idx].formula(s, f, v, c, t);
+          data[idx] = items[idx].formula(s, f, v, p, t);
         }
         return data[idx];
       };
@@ -158,7 +158,7 @@ export default class BoxModel {
     this.variables.forEach(({ id }) => v(id));
     this.flows.forEach(({ id }) => f(id));
 
-    return { stocks, flows, variables, constants, t };
+    return { stocks, flows, variables, parameters, t };
   }
 
   public step(stocksAtT: number[], t: number, h: number): number[];
