@@ -33,10 +33,10 @@ export default class BoxModelEngine {
   public static createIdToIdxMap(
     arr: ReadonlyArray<{ readonly id: string }>
   ): { [key: string]: number } {
-    return arr.reduce(
-      (acc, { id }, idx) => Object.assign(acc, { [id]: idx }),
-      {}
-    );
+    return arr.reduce((acc: { [key: string]: number }, { id }, idx) => {
+      acc[id] = idx;
+      return acc;
+    }, {});
   }
 
   public evaluateGraph(stocks: ReadonlyArray<number>, t: number): Record {
