@@ -36,21 +36,115 @@ export interface BoxModel {
   parameters: Array<Parameter>;
 }
 
-export interface Record {
-  stocks: number[];
-  flows: number[];
-  variables: number[];
-  parameters: number[];
+export interface NumericArray {
+  every(
+    predicate: (value: number, index: number, array: this) => unknown,
+    thisArg?: any
+  ): boolean;
+  fill(value: number, start?: number, end?: number): this;
+  filter(
+    predicate: (value: number, index: number, array: this) => any,
+    thisArg?: any
+  ): this;
+  find(
+    predicate: (value: number, index: number, obj: this) => boolean,
+    thisArg?: any
+  ): number | undefined;
+  findIndex(
+    predicate: (value: number, index: number, obj: this) => boolean,
+    thisArg?: any
+  ): number;
+  forEach(
+    callbackfn: (value: number, index: number, array: this) => void,
+    thisArg?: any
+  ): void;
+  indexOf(searchElement: number, fromIndex?: number): number;
+  join(separator?: string): string;
+  lastIndexOf(searchElement: number, fromIndex?: number): number;
+  readonly length: number;
+  map(
+    callbackfn: (value: number, index: number, array: this) => number,
+    thisArg?: any
+  ): this;
+  reduce(
+    callbackfn: (
+      previousValue: number,
+      currentValue: number,
+      currentIndex: number,
+      array: this
+    ) => number
+  ): number;
+  reduce(
+    callbackfn: (
+      previousValue: number,
+      currentValue: number,
+      currentIndex: number,
+      array: this
+    ) => number,
+    initialValue: number
+  ): number;
+  reduce<U>(
+    callbackfn: (
+      previousValue: U,
+      currentValue: number,
+      currentIndex: number,
+      array: this
+    ) => U,
+    initialValue: U
+  ): U;
+  reduceRight(
+    callbackfn: (
+      previousValue: number,
+      currentValue: number,
+      currentIndex: number,
+      array: this
+    ) => number
+  ): number;
+  reduceRight(
+    callbackfn: (
+      previousValue: number,
+      currentValue: number,
+      currentIndex: number,
+      array: this
+    ) => number,
+    initialValue: number
+  ): number;
+  reduceRight<U>(
+    callbackfn: (
+      previousValue: U,
+      currentValue: number,
+      currentIndex: number,
+      array: this
+    ) => U,
+    initialValue: U
+  ): U;
+  reverse(): this;
+  slice(start?: number, end?: number): this;
+  some(
+    predicate: (value: number, index: number, array: this) => unknown,
+    thisArg?: any
+  ): boolean;
+  sort(compareFn?: (a: number, b: number) => number): this;
+  toLocaleString(): string;
+  toString(): string;
+  [index: number]: number;
+}
+
+export interface Record<T extends NumericArray> {
+  stocks: T;
+  flows: T;
+  variables: T;
+  parameters: T;
   t: number;
 }
 
-export type IVPIntegrator = (
-  y: ReadonlyArray<number>,
+export type IVPIntegrator<T extends NumericArray> = (
+  y: T,
   x: number,
   h: number,
-  derivatives: (y: ReadonlyArray<number>, x: number) => number[]
-) => number[];
+  derivatives: (y: T, x: number) => T
+) => T;
 
-export interface BoxModelOptions {
-  integrator: IVPIntegrator;
+export interface BoxModelOptions<T extends NumericArray> {
+  integrator: IVPIntegrator<T>;
 }

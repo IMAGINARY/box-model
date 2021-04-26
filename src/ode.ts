@@ -1,23 +1,25 @@
-export function euler(
-  y: ReadonlyArray<number>,
+import { NumericArray } from './types';
+
+export function euler<T extends NumericArray>(
+  y: T,
   x: number,
   h: number,
-  derivatives: (y: ReadonlyArray<number>, x: number) => number[]
-): number[] {
+  derivatives: (y: T, x: number) => T
+): T {
   const dydx = derivatives(y, x);
   return y.map((yi, i) => yi + h * dydx[i]);
 }
 
-export function rk4(
-  y: ReadonlyArray<number>,
+export function rk4<T extends NumericArray>(
+  y: T,
   x: number,
   h: number,
-  derivatives: (y: ReadonlyArray<number>, x: number) => number[]
-): number[] {
+  derivatives: (y: T, x: number) => T
+): T {
   const n: number = y.length;
 
   const dydx = derivatives(y, x);
-  const yTemp: number[] = new Array(n) as number[];
+  const yTemp = y.map(() => 0);
 
   const h2 = h / 2.0;
   const h6 = h / 6.0;
