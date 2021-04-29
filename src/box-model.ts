@@ -10,14 +10,18 @@ import {
 
 import { rk4 } from './ode';
 
+import { sum, hasOwnProperty } from './util';
+
 interface LookupFunctionWithData extends LookupFunction {
   data: (number | boolean)[];
 }
 
 type FlowGetter = (y: ReadonlyArray<number>, x: number) => number[];
 
-function sum(arr: Array<number>) {
-  return arr.reduce((acc, cur) => acc + cur, 0);
+function throwLookupError(tableName: string, id: string) {
+  throw new Error(
+    `Value of unknown ${tableName} requested: ${id}. Check your box model definition.`
+  );
 }
 
 export default class BoxModelEngine {
@@ -41,23 +45,32 @@ export default class BoxModelEngine {
 
   public evaluateGraph(stocks: ReadonlyArray<number>, t: number): Record {
     const stockIdToIdx = BoxModelEngine.createIdToIdxMap(this.model.stocks);
-    const s: LookupFunction = (id) => stocks[stockIdToIdx[id]];
+    const s: LookupFunction = (id) => {
+      if (!hasOwnProperty(stockIdToIdx, id)) throwLookupError('stock', id);
+      return stocks[stockIdToIdx[id]];
+    };
 
     const parameterIdToIdx = BoxModelEngine.createIdToIdxMap(
       this.model.parameters
     );
     const parameters = this.model.parameters.map(({ value }) => value);
-    const p: LookupFunction = (id) => parameters[parameterIdToIdx[id]];
+    const p: LookupFunction = (id) => {
+      if (!hasOwnProperty(parameterIdToIdx, id))
+        throwLookupError('parameter', id);
+      return parameters[parameterIdToIdx[id]];
+    };
 
     let f: LookupFunctionWithData;
     let v: LookupFunctionWithData;
 
     const buildEvaluator = (
-      items: ReadonlyArray<Flow> | ReadonlyArray<Variable>
+      items: ReadonlyArray<Flow> | ReadonlyArray<Variable>,
+      name: string
     ): LookupFunctionWithData => {
       const idToIdx = BoxModelEngine.createIdToIdxMap(items);
       const data: (number | boolean)[] = items.map(() => false);
       const evaluator = (id: string) => {
+        if (!hasOwnProperty(idToIdx, id)) throwLookupError(name, id);
         const idx = idToIdx[id];
         if (typeof data[idx] === 'boolean') {
           // not initialized yet
@@ -76,9 +89,9 @@ export default class BoxModelEngine {
       return evaluator;
     };
 
-    v = buildEvaluator(this.model.variables);
+    v = buildEvaluator(this.model.variables, 'variable');
 
-    f = buildEvaluator(this.model.flows);
+    f = buildEvaluator(this.model.flows, 'flow');
 
     this.model.variables.forEach(({ id }) => v(id));
     this.model.flows.forEach(({ id }) => f(id));
