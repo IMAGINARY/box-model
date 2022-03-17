@@ -1,5 +1,5 @@
 import { BoxModel, BoxModelOptions, Record, IVPIntegrator } from './types';
-declare type FlowGetter = (y: ReadonlyArray<number>, x: number) => number[];
+declare type FlowGetter = (y: ReadonlyArray<number>, x: number) => ReadonlyArray<number>;
 export default class BoxModelEngine {
     model: BoxModel;
     integrator: IVPIntegrator;
@@ -11,12 +11,12 @@ export default class BoxModelEngine {
     };
     evaluateGraph(stocks: ReadonlyArray<number>, t: number): Record;
     step(stocksAtT: ReadonlyArray<number>, t: number, h: number): number[];
-    step(stocksAtT: number[], flowsAtT: number[], t: number, h: number): number[];
+    step(stocksAtT: ReadonlyArray<number>, flowsAtT: ReadonlyArray<number>, t: number, h: number): number[];
     private step3;
     private step4;
-    protected stepImpl(stocksAtT: number[], getFlows: FlowGetter, t: number, h: number): number[];
-    stepExt(stocksAtT: number[], t: number, h: number): Record;
-    stepExt(stocksAtT: number[], flowsAtT: number[], t: number, h: number): Record;
+    protected stepImpl(stocksAtT: ReadonlyArray<number>, getFlows: FlowGetter, t: number, h: number): number[];
+    stepExt(stocksAtT: ReadonlyArray<number>, t: number, h: number): Record;
+    stepExt(stocksAtT: ReadonlyArray<number>, flowsAtT: ReadonlyArray<number>, t: number, h: number): Record;
     private stepExt3;
     private stepExt4;
 }

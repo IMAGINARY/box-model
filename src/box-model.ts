@@ -16,7 +16,10 @@ interface LookupFunctionWithData extends LookupFunction {
   data: (number | boolean)[];
 }
 
-type FlowGetter = (y: ReadonlyArray<number>, x: number) => number[];
+type FlowGetter = (
+  y: ReadonlyArray<number>,
+  x: number
+) => ReadonlyArray<number>;
 
 function throwLookupError(tableName: string, id: string) {
   throw new Error(
@@ -107,14 +110,14 @@ export default class BoxModelEngine {
 
   public step(stocksAtT: ReadonlyArray<number>, t: number, h: number): number[];
   public step(
-    stocksAtT: number[],
-    flowsAtT: number[],
+    stocksAtT: ReadonlyArray<number>,
+    flowsAtT: ReadonlyArray<number>,
     t: number,
     h: number
   ): number[];
   public step(
-    stocksAtT: number[],
-    tOrFlowsAtT: number[] | number,
+    stocksAtT: ReadonlyArray<number>,
+    tOrFlowsAtT: ReadonlyArray<number> | number,
     tOrH: number,
     h?: number
   ): number[] {
@@ -125,14 +128,18 @@ export default class BoxModelEngine {
     throw new TypeError();
   }
 
-  private step3(stocksAtT: number[], t: number, h: number): number[] {
+  private step3(
+    stocksAtT: ReadonlyArray<number>,
+    t: number,
+    h: number
+  ): number[] {
     const getFlows: FlowGetter = (y, x) => this.evaluateGraph(y, x).flows;
     return this.stepImpl(stocksAtT, getFlows, t, h);
   }
 
   private step4(
-    stocksAtT: number[],
-    flowsAtT: number[],
+    stocksAtT: ReadonlyArray<number>,
+    flowsAtT: ReadonlyArray<number>,
     t: number,
     h: number
   ): number[] {
@@ -142,7 +149,7 @@ export default class BoxModelEngine {
   }
 
   protected stepImpl(
-    stocksAtT: number[],
+    stocksAtT: ReadonlyArray<number>,
     getFlows: FlowGetter,
     t: number,
     h: number
@@ -161,16 +168,20 @@ export default class BoxModelEngine {
     return this.integrator(stocksAtT, t, h, derivatives);
   }
 
-  public stepExt(stocksAtT: number[], t: number, h: number): Record;
   public stepExt(
-    stocksAtT: number[],
-    flowsAtT: number[],
+    stocksAtT: ReadonlyArray<number>,
     t: number,
     h: number
   ): Record;
   public stepExt(
-    stocksAtT: number[],
-    tOrFlowsAtT: number[] | number,
+    stocksAtT: ReadonlyArray<number>,
+    flowsAtT: ReadonlyArray<number>,
+    t: number,
+    h: number
+  ): Record;
+  public stepExt(
+    stocksAtT: ReadonlyArray<number>,
+    tOrFlowsAtT: ReadonlyArray<number> | number,
     tOrH: number,
     h?: number
   ): Record {
@@ -181,14 +192,18 @@ export default class BoxModelEngine {
     throw new TypeError();
   }
 
-  private stepExt3(stocksAtT: number[], t: number, h: number): Record {
+  private stepExt3(
+    stocksAtT: ReadonlyArray<number>,
+    t: number,
+    h: number
+  ): Record {
     const stocks = this.step(stocksAtT, t, h);
     return this.evaluateGraph(stocks, t + h);
   }
 
   private stepExt4(
-    stocksAtT: number[],
-    flowsAtT: number[],
+    stocksAtT: ReadonlyArray<number>,
+    flowsAtT: ReadonlyArray<number>,
     t: number,
     h: number
   ): Record {
