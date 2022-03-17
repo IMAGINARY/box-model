@@ -1,6 +1,4 @@
 import {
-  Flow,
-  Variable,
   BoxModel,
   BoxModelOptions,
   LookupFunction,
@@ -63,38 +61,34 @@ export default class BoxModelEngine {
       return parameters[parameterIdToIdx[id]];
     };
 
-    let f: LookupFunctionWithData;
-    let v: LookupFunctionWithData;
-
-    const buildEvaluator = (
-      items: ReadonlyArray<Flow> | ReadonlyArray<Variable>,
-      name: string
-    ): LookupFunctionWithData => {
-      const idToIdx = BoxModelEngine.createIdToIdxMap(items);
-      const data: (number | boolean)[] = items.map(() => false);
-      const evaluator = (id: string) => {
-        if (!hasOwnProperty(idToIdx, id)) throwLookupError(name, id);
-        const idx = idToIdx[id];
-        if (typeof data[idx] === 'boolean') {
-          // not initialized yet
-          if (data[idx]) {
-            throw new Error(`Evaluation cycle detected starting at: ${id}`);
+    const [f, v] = [
+      { items: this.model.flows, name: 'flow' },
+      { items: this.model.variables, name: 'variable' },
+    ].map(
+      ({ items, name }): LookupFunctionWithData => {
+        // build graph evaluator functions
+        const idToIdx = BoxModelEngine.createIdToIdxMap(items);
+        const data: (number | boolean)[] = items.map(() => false);
+        const evaluator = (id: string) => {
+          if (!hasOwnProperty(idToIdx, id)) throwLookupError(name, id);
+          const idx = idToIdx[id];
+          if (typeof data[idx] === 'boolean') {
+            // not initialized yet
+            if (data[idx]) {
+              throw new Error(`Evaluation cycle detected starting at: ${id}`);
+            } else {
+              data[idx] = true; // guard the element for cycle detection
+              data[idx] = items[idx].formula(s, f, v, p, t);
+              return data[idx] as number;
+            }
           } else {
-            data[idx] = true; // guard the element for cycle detection
-            data[idx] = items[idx].formula(s, f, v, p, t);
             return data[idx] as number;
           }
-        } else {
-          return data[idx] as number;
-        }
-      };
-      evaluator.data = data;
-      return evaluator;
-    };
-
-    v = buildEvaluator(this.model.variables, 'variable');
-
-    f = buildEvaluator(this.model.flows, 'flow');
+        };
+        evaluator.data = data;
+        return evaluator;
+      }
+    );
 
     this.model.variables.forEach(({ id }) => v(id));
     this.model.flows.forEach(({ id }) => f(id));
