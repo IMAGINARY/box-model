@@ -25,6 +25,13 @@ function throwLookupError(tableName: string, id: string) {
   );
 }
 
+type ConvergenceCriterion = (
+  r: Record,
+  rPrevious: Record,
+  i: number,
+  bme: BoxModelEngine
+) => boolean;
+
 export default class BoxModelEngine {
   public model: BoxModel;
 
@@ -204,6 +211,38 @@ export default class BoxModelEngine {
     const stocks = this.step(stocksAtT, flowsAtT, t, h);
     return this.evaluateGraph(stocks, t + h);
   }
+
+  public converge(
+    stocksAtT: ReadonlyArray<number>,
+    t: number,
+    h: number,
+    criteria: ConvergenceCriterion
+  ): number[] {
+    return this.convergeExt(stocksAtT, t, h, criteria).stocks;
+  }
+
+  public convergeExt(
+    stocksAtT: ReadonlyArray<number>,
+    t: number,
+    h: number,
+    criterion: ConvergenceCriterion
+  ): Record {
+    let lastRecord = this.evaluateGraph(stocksAtT, t);
+    const getFlows: FlowGetter = (y, x) =>
+      x === lastRecord.t ? lastRecord.flows : this.evaluateGraph(y, x).flows;
+    for (let i = 0, stop = false; !stop; i += 1) {
+      const stocks = this.stepImpl(
+        lastRecord.stocks,
+        getFlows,
+        lastRecord.t,
+        h
+      );
+      const record = this.evaluateGraph(stocks, t + i * h);
+      stop = criterion(record, lastRecord, i, this);
+      lastRecord = record;
+    }
+    return lastRecord;
+  }
 }
 
-export { BoxModelEngine };
+export { BoxModelEngine, ConvergenceCriterion };

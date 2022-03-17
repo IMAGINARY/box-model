@@ -1,5 +1,6 @@
 import { BoxModel, BoxModelOptions, Record, IVPIntegrator } from './types';
 declare type FlowGetter = (y: ReadonlyArray<number>, x: number) => ReadonlyArray<number>;
+declare type ConvergenceCriterion = (r: Record, rPrevious: Record, i: number, bme: BoxModelEngine) => boolean;
 export default class BoxModelEngine {
     model: BoxModel;
     integrator: IVPIntegrator;
@@ -19,6 +20,8 @@ export default class BoxModelEngine {
     stepExt(stocksAtT: ReadonlyArray<number>, flowsAtT: ReadonlyArray<number>, t: number, h: number): Record;
     private stepExt3;
     private stepExt4;
+    converge(stocksAtT: ReadonlyArray<number>, t: number, h: number, criteria: ConvergenceCriterion): number[];
+    convergeExt(stocksAtT: ReadonlyArray<number>, t: number, h: number, criterion: ConvergenceCriterion): Record;
 }
-export { BoxModelEngine };
+export { BoxModelEngine, ConvergenceCriterion };
 //# sourceMappingURL=box-model.d.ts.map
