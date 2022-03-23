@@ -1,12 +1,18 @@
 export type LookupFunction = (id: string) => number;
 
-export type Formula = (
-  s: LookupFunction,
-  f: LookupFunction,
-  v: LookupFunction,
-  c: LookupFunction,
-  t: number
-) => number;
+export type Formula = ({
+  s,
+  f,
+  v,
+  p,
+  t,
+}: {
+  s: LookupFunction;
+  f: LookupFunction;
+  v: LookupFunction;
+  p: LookupFunction;
+  t: number;
+}) => number;
 
 export interface Stock {
   id: string;

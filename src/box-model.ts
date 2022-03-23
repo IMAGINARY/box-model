@@ -42,9 +42,9 @@ export default class BoxModelEngine {
     this.integrator = options.integrator;
   }
 
-  public static createIdToIdxMap(
-    arr: ReadonlyArray<{ readonly id: string }>
-  ): { [key: string]: number } {
+  public static createIdToIdxMap(arr: ReadonlyArray<{ readonly id: string }>): {
+    [key: string]: number;
+  } {
     return arr.reduce((acc: { [key: string]: number }, { id }, idx) => {
       acc[id] = idx;
       return acc;
@@ -71,31 +71,29 @@ export default class BoxModelEngine {
     const [f, v] = [
       { items: this.model.flows, name: 'flow' },
       { items: this.model.variables, name: 'variable' },
-    ].map(
-      ({ items, name }): LookupFunctionWithData => {
-        // build graph evaluator functions
-        const idToIdx = BoxModelEngine.createIdToIdxMap(items);
-        const data: (number | boolean)[] = items.map(() => false);
-        const evaluator = (id: string) => {
-          if (!hasOwnProperty(idToIdx, id)) throwLookupError(name, id);
-          const idx = idToIdx[id];
-          if (typeof data[idx] === 'boolean') {
-            // not initialized yet
-            if (data[idx]) {
-              throw new Error(`Evaluation cycle detected starting at: ${id}`);
-            } else {
-              data[idx] = true; // guard the element for cycle detection
-              data[idx] = items[idx].formula(s, f, v, p, t);
-              return data[idx] as number;
-            }
+    ].map(({ items, name }): LookupFunctionWithData => {
+      // build graph evaluator functions
+      const idToIdx = BoxModelEngine.createIdToIdxMap(items);
+      const data: (number | boolean)[] = items.map(() => false);
+      const evaluator = (id: string) => {
+        if (!hasOwnProperty(idToIdx, id)) throwLookupError(name, id);
+        const idx = idToIdx[id];
+        if (typeof data[idx] === 'boolean') {
+          // not initialized yet
+          if (data[idx]) {
+            throw new Error(`Evaluation cycle detected starting at: ${id}`);
           } else {
+            data[idx] = true; // guard the element for cycle detection
+            data[idx] = items[idx].formula({ s, f, v, p, t });
             return data[idx] as number;
           }
-        };
-        evaluator.data = data;
-        return evaluator;
-      }
-    );
+        } else {
+          return data[idx] as number;
+        }
+      };
+      evaluator.data = data;
+      return evaluator;
+    });
 
     this.model.variables.forEach(({ id }) => v(id));
     this.model.flows.forEach(({ id }) => f(id));

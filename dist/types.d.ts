@@ -1,5 +1,11 @@
 export declare type LookupFunction = (id: string) => number;
-export declare type Formula = (s: LookupFunction, f: LookupFunction, v: LookupFunction, c: LookupFunction, t: number) => number;
+export declare type Formula = ({ s, f, v, p, t, }: {
+    s: LookupFunction;
+    f: LookupFunction;
+    v: LookupFunction;
+    p: LookupFunction;
+    t: number;
+}) => number;
 export interface Stock {
     id: string;
     in: string[];
