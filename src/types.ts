@@ -18,25 +18,21 @@ export interface Stock {
   id: string;
   in: string[];
   out: string[];
-  [key: string]: unknown;
 }
 
 export interface Flow {
   id: string;
   formula: Formula;
-  [key: string]: unknown;
 }
 
 export interface Variable {
   id: string;
   formula: Formula;
-  [key: string]: unknown;
 }
 
 export interface Parameter {
   id: string;
   value: number;
-  [key: string]: unknown;
 }
 
 export interface BoxModel {
@@ -44,7 +40,6 @@ export interface BoxModel {
   flows: Array<Flow>;
   variables: Array<Variable>;
   parameters: Array<Parameter>;
-  [key: string]: unknown;
 }
 
 export interface Record {
@@ -53,7 +48,6 @@ export interface Record {
   variables: number[];
   parameters: number[];
   t: number;
-  [key: string]: unknown;
 }
 
 export type IVPIntegrator = (
@@ -65,5 +59,4 @@ export type IVPIntegrator = (
 
 export interface BoxModelOptions {
   integrator: IVPIntegrator;
-  [key: string]: unknown;
 }
