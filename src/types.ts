@@ -35,18 +35,23 @@ export interface Parameter {
   value: number;
 }
 
-export interface BoxModel {
-  stocks: Array<Stock>;
-  flows: Array<Flow>;
-  variables: Array<Variable>;
-  parameters: Array<Parameter>;
+export interface BoxModelElements<TStock, TFlow, TVariable, TParameter> {
+  stocks: TStock[];
+  flows: TFlow[];
+  variables: TVariable[];
+  parameters: TParameter[];
 }
 
-export interface Record {
-  stocks: number[];
-  flows: number[];
-  variables: number[];
-  parameters: number[];
+export type BoxModelElementKey =
+  | 'stocks'
+  | 'flows'
+  | 'variables'
+  | 'parameters';
+
+export type BoxModel = BoxModelElements<Stock, Flow, Variable, Parameter>;
+
+export interface Record
+  extends BoxModelElements<number, number, number, number> {
   t: number;
 }
 

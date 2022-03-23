@@ -23,17 +23,15 @@ export interface Parameter {
     id: string;
     value: number;
 }
-export interface BoxModel {
-    stocks: Array<Stock>;
-    flows: Array<Flow>;
-    variables: Array<Variable>;
-    parameters: Array<Parameter>;
+export interface BoxModelElements<TStock, TFlow, TVariable, TParameter> {
+    stocks: TStock[];
+    flows: TFlow[];
+    variables: TVariable[];
+    parameters: TParameter[];
 }
-export interface Record {
-    stocks: number[];
-    flows: number[];
-    variables: number[];
-    parameters: number[];
+export declare type BoxModelElementKey = 'stocks' | 'flows' | 'variables' | 'parameters';
+export declare type BoxModel = BoxModelElements<Stock, Flow, Variable, Parameter>;
+export interface Record extends BoxModelElements<number, number, number, number> {
     t: number;
 }
 export declare type IVPIntegrator = (y: ReadonlyArray<number>, x: number, h: number, derivatives: (y: ReadonlyArray<number>, x: number) => number[]) => number[];
