@@ -10,6 +10,7 @@ export default class BoxModelEngine {
     }>): {
         [key: string]: number;
     };
+    createGraphEvaluator(): (stocks: ReadonlyArray<number>, t: number) => Record;
     evaluateGraph(stocks: ReadonlyArray<number>, t: number): Record;
     step(stocksAtT: ReadonlyArray<number>, t: number, h: number): number[];
     step(stocksAtT: ReadonlyArray<number>, flowsAtT: ReadonlyArray<number>, t: number, h: number): number[];
