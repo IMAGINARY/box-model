@@ -23,8 +23,8 @@ function derivatives(getFlows: ReadonlyFlowGetter) {
     const dydx = new Array<number>(y.length).fill(0.0);
     const flows = getFlows(y, x);
     flows.forEach(({ value, from, to }) => {
-      dydx[from] -= value;
-      dydx[to] += value;
+      if (from >= 0 && from < dydx.length) dydx[from] -= value;
+      if (to >= 0 && to < dydx.length) dydx[to] += value;
     });
     return dydx;
   };

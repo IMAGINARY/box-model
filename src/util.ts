@@ -10,3 +10,9 @@ export function hasOwnProperty(
 ): boolean {
   return hasOwnPropertyFunc.call(o, key);
 }
+
+export function throwLookupError(tableName: string, id: string) {
+  throw new Error(
+    `Value of unknown ${tableName} requested: ${id}. Check your box model definition.`
+  );
+}

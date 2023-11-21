@@ -8,18 +8,12 @@ import {
 
 import { rk4 } from './ode';
 
-import { sum, hasOwnProperty } from './util';
+import { sum, hasOwnProperty, throwLookupError } from './util';
 
 type FlowGetter = (
   y: ReadonlyArray<number>,
   x: number
 ) => ReadonlyArray<number>;
-
-function throwLookupError(tableName: string, id: string) {
-  throw new Error(
-    `Value of unknown ${tableName} requested: ${id}. Check your box model definition.`
-  );
-}
 
 type ConvergenceCriterion = (
   r: Record,
