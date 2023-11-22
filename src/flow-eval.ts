@@ -7,11 +7,8 @@ import {
   Record,
 } from './types';
 import { BoxModelEngine } from './box-model';
-import {
-  Flow as FlowV2,
-  FlowGetter as FlowGetterV2,
-} from './engine-implementation';
-import { hasOwnProperty, throwLookupError } from './util';
+import { FlowGetter as FlowGetterV2 } from './engine-implementation';
+import { sumIndirect, hasOwnProperty, throwLookupError } from './util';
 
 function createBoxModelEvaluator(
   model: BoxModel
@@ -84,14 +81,28 @@ function computeFormulaEvaluationOrder(
   return computeFormulaEvaluationOrderExt(model, stocks, t).evaluationOrder;
 }
 
+function createIdToElementMap<T extends { id: string }>(
+  elements: T[]
+): Map<string, T> {
+  return new Map<string, T>(elements.map((element) => [element.id, element]));
+}
+
+class RecordAccessor {
+  protected readonly record: Record;
+
+  constructor(record: Record) {
+    this.record = record;
+  }
+}
+
 type BolModelElementKeySingular = 'stock' | 'flow' | 'variable' | 'parameter';
-function createLookupFunction(
+function createLookupFunction<T>(
   type: BolModelElementKeySingular,
   values: number[],
-  idToIdx: { [k: string]: number }
+  map: Map<string, T>
 ): LookupFunction {
   return (id: string) => {
-    if (!hasOwnProperty(idToIdx, id)) throwLookupError(type, id);
+    if (!map.has(id)) throwLookupError(type, id);
     return values[idToIdx[id]];
   };
 }
@@ -171,33 +182,19 @@ function createFlowEvaluatorFromModelEvaluator(
   evaluator: Evaluator
 ): FlowGetterV2 {
   const flowIdToIdx = BoxModelEngine.createIdToIdxMap(model.flows);
+  const stocksWithFlowsIdx = model.stocks.map((stock) => ({
+    id: stock.id,
+    in: stock.in.map((flowId) => flowIdToIdx[flowId]),
+    out: stock.out.map((flowId) => flowIdToIdx[flowId]),
+  }));
 
-  const flowTemplates = new Array<{ modelFlowIndex: number; flow: FlowV2 }>();
-
-  model.stocks.forEach((stock, stockIndex) => {
-    stock.out.forEach((flowId) => {
-      const flowIndex = flowIdToIdx[flowId];
-      flowTemplates.push({
-        modelFlowIndex: flowIndex,
-        flow: { value: 0.0, from: stockIndex, to: -1 },
-      });
-    });
-    stock.in.forEach((flowId) => {
-      const flowIndex = flowIdToIdx[flowId];
-      flowTemplates.push({
-        modelFlowIndex: flowIndex,
-        flow: { value: 0.0, from: -1, to: stockIndex },
-      });
-    });
-  });
-
-  const flowEvaluator: FlowGetterV2 = (stocks, t): FlowV2[] => {
+  const flowEvaluator: FlowGetterV2 = (stocks, t) => {
     const boxModelFlows = evaluator(stocks, t).flows;
-    const flows = flowTemplates.map(({ modelFlowIndex, flow }) => ({
-      ...flow,
-      value: boxModelFlows[modelFlowIndex],
-    }));
-    return flows;
+    return stocksWithFlowsIdx.map(
+      (stock) =>
+        sumIndirect(boxModelFlows, stock.in) -
+        sumIndirect(boxModelFlows, stock.out)
+    );
   };
 
   return flowEvaluator;

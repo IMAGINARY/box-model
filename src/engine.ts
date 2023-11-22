@@ -1,9 +1,4 @@
-import type {
-  Flow,
-  FlowGetter,
-  ReadonlyFlowGetter,
-  ConvergenceCriterion,
-} from './engine-implementation';
+import type { FlowGetter, ConvergenceCriterion } from './engine-implementation';
 import { stepImpl, convergeImpl } from './engine-implementation';
 import { IVPIntegrator } from './types';
 
@@ -11,7 +6,7 @@ function step5(
   stocksAtT: ReadonlyArray<number>,
   t: number,
   h: number,
-  computeFlows: ReadonlyFlowGetter,
+  computeFlows: FlowGetter,
   integrator?: IVPIntegrator
 ): number[] {
   return stepImpl(stocksAtT, t, h, computeFlows, integrator);
@@ -19,14 +14,15 @@ function step5(
 
 function step6(
   stocksAtT: ReadonlyArray<number>,
-  flowsAtT: ReadonlyArray<Readonly<Flow>>,
+  flowsAtT: ReadonlyArray<number>,
   t: number,
   h: number,
-  computeFlows: ReadonlyFlowGetter,
+  computeFlows: FlowGetter,
   integrator?: IVPIntegrator
 ): number[] {
-  const getFlows: ReadonlyFlowGetter = (y, x) =>
-    x === t ? flowsAtT : computeFlows(y, x);
+  const mutableFlowsAtT = [...flowsAtT];
+  const getFlows: FlowGetter = (y, x) =>
+    x === t ? mutableFlowsAtT : computeFlows(y, x);
   return stepImpl(stocksAtT, t, h, getFlows, integrator);
 }
 
@@ -34,23 +30,23 @@ function step(
   stocksAtT: ReadonlyArray<number>,
   t: number,
   h: number,
-  computeFlows: ReadonlyFlowGetter,
+  computeFlows: FlowGetter,
   integrator?: IVPIntegrator
 ): number[];
 function step(
   stocksAtT: ReadonlyArray<number>,
-  flowsAtT: ReadonlyArray<Readonly<Flow>>,
+  flowsAtT: ReadonlyArray<number>,
   t: number,
   h: number,
-  computeFlows: ReadonlyFlowGetter,
+  computeFlows: FlowGetter,
   integrator?: IVPIntegrator
 ): number[];
 function step(
   stocksAtT: ReadonlyArray<number>,
-  tOrFlowsAtT: number | ReadonlyArray<Readonly<Flow>>,
+  tOrFlowsAtT: number | ReadonlyArray<number>,
   tOrH: number,
-  hOrComputeFlows: number | ReadonlyFlowGetter,
-  computeFlowsOrIntegrator?: ReadonlyFlowGetter | IVPIntegrator,
+  hOrComputeFlows: number | FlowGetter,
+  computeFlowsOrIntegrator?: FlowGetter | IVPIntegrator,
   integrator?: IVPIntegrator
 ): number[] {
   if (typeof tOrFlowsAtT === 'number')
@@ -58,7 +54,7 @@ function step(
       stocksAtT,
       tOrFlowsAtT,
       tOrH,
-      hOrComputeFlows as ReadonlyFlowGetter,
+      hOrComputeFlows as FlowGetter,
       computeFlowsOrIntegrator as IVPIntegrator
     );
 
@@ -67,7 +63,7 @@ function step(
     tOrFlowsAtT,
     tOrH,
     hOrComputeFlows as number,
-    computeFlowsOrIntegrator as ReadonlyFlowGetter,
+    computeFlowsOrIntegrator as FlowGetter,
     integrator as IVPIntegrator
   );
 }
@@ -76,7 +72,7 @@ function converge6<T>(
   stocksAtT: ReadonlyArray<number>,
   t: number,
   h: number,
-  computeFlows: ReadonlyFlowGetter,
+  computeFlows: FlowGetter,
   criterion: ConvergenceCriterion<T>,
   integrator?: IVPIntegrator
 ): T {
@@ -85,15 +81,16 @@ function converge6<T>(
 
 function converge7<T>(
   stocksAtT: ReadonlyArray<number>,
-  flowsAtT: ReadonlyArray<Readonly<Flow>>,
+  flowsAtT: ReadonlyArray<number>,
   t: number,
   h: number,
-  computeFlows: ReadonlyFlowGetter,
+  computeFlows: FlowGetter,
   criterion: ConvergenceCriterion<T>,
   integrator?: IVPIntegrator
 ): T {
-  const getFlows: ReadonlyFlowGetter = (y, x) =>
-    x === t ? flowsAtT : computeFlows(y, x);
+  const mutableFlowsAtT = [...flowsAtT];
+  const getFlows: FlowGetter = (y, x) =>
+    x === t ? mutableFlowsAtT : computeFlows(y, x);
   return convergeImpl(stocksAtT, t, h, getFlows, criterion, integrator);
 }
 
@@ -101,25 +98,25 @@ function converge<T>(
   stocksAtT: ReadonlyArray<number>,
   t: number,
   h: number,
-  computeFlows: ReadonlyFlowGetter,
+  computeFlows: FlowGetter,
   criterion: ConvergenceCriterion<T>,
   integrator?: IVPIntegrator
 ): T;
 function converge<T>(
   stocksAtT: ReadonlyArray<number>,
-  flowsAtT: ReadonlyArray<Readonly<Flow>>,
+  flowsAtT: ReadonlyArray<number>,
   t: number,
   h: number,
-  computeFlows: ReadonlyFlowGetter,
+  computeFlows: FlowGetter,
   criterion: ConvergenceCriterion<T>,
   integrator?: IVPIntegrator
 ): T;
 function converge<T>(
   stocksAtT: ReadonlyArray<number>,
-  tOrFlowsAtT: number | ReadonlyArray<Readonly<Flow>>,
+  tOrFlowsAtT: number | ReadonlyArray<number>,
   tOrH: number,
-  hOrComputeFlows: number | ReadonlyFlowGetter,
-  computeFlowsOrCriterion: ReadonlyFlowGetter | ConvergenceCriterion<T>,
+  hOrComputeFlows: number | FlowGetter,
+  computeFlowsOrCriterion: FlowGetter | ConvergenceCriterion<T>,
   criterionOrIntegrator?: ConvergenceCriterion<T> | IVPIntegrator,
   integrator?: IVPIntegrator
 ): T {
@@ -128,7 +125,7 @@ function converge<T>(
       stocksAtT,
       tOrFlowsAtT,
       tOrH,
-      hOrComputeFlows as ReadonlyFlowGetter,
+      hOrComputeFlows as FlowGetter,
       computeFlowsOrCriterion as ConvergenceCriterion<T>,
       criterionOrIntegrator as IVPIntegrator
     );
@@ -138,11 +135,11 @@ function converge<T>(
     tOrFlowsAtT,
     tOrH,
     hOrComputeFlows as number,
-    computeFlowsOrCriterion as ReadonlyFlowGetter,
+    computeFlowsOrCriterion as FlowGetter,
     criterionOrIntegrator as ConvergenceCriterion<T>,
     integrator as IVPIntegrator
   );
 }
 
-export type { Flow, FlowGetter, ReadonlyFlowGetter, ConvergenceCriterion };
+export type { FlowGetter, ConvergenceCriterion };
 export { step, converge };

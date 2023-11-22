@@ -41,10 +41,10 @@ export default class BoxModelEngine {
     }, {});
   }
 
-  public createGraphEvaluator(): (
+  public createGraphEvaluatorExt(): (
     stocks: ReadonlyArray<number>,
     t: number
-  ) => Record {
+  ) => { record: Record; topSort: {}[] } {
     const { stocks: ms, flows: mf, variables: mv, parameters: mp } = this.model;
 
     const stockIdToIdx = BoxModelEngine.createIdToIdxMap(ms);
